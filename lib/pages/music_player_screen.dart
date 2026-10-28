@@ -8,9 +8,7 @@ import 'dart:typed_data';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MusicPlayerScreen extends StatefulWidget {
-  final List<SongModel> playlist;
-  final int initialIndex;
-  const MusicPlayerScreen({super.key, required this.playlist, required this.initialIndex});
+  const MusicPlayerScreen({super.key,});
 
 
   @override
@@ -29,10 +27,7 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
   void initState() {
     super.initState();
     _loadFavorites();
-    if(_controller.currentPlaylist != widget.playlist||
-    _controller.audioPlayer.currentIndex != widget.initialIndex) {
-      _controller.playPlaylist(widget.playlist, widget.initialIndex);
-    }
+   
   }
   @override
   void dispose() {

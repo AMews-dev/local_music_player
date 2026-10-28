@@ -56,7 +56,7 @@ class SongListView extends StatelessWidget {
             builder: (context) {
               return FractionallySizedBox(
                 heightFactor: 1,
-                child: MusicPlayerScreen(playlist: songs, initialIndex: index,),
+                child: MusicPlayerScreen(),
               );
             });
           },
