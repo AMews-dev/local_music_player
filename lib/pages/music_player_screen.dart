@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/services/music_controller.dart';
 import 'package:just_audio/just_audio.dart';
 import "package:on_audio_query/on_audio_query.dart";
 import 'package:palette_generator/palette_generator.dart';
@@ -11,14 +12,14 @@ class MusicPlayerScreen extends StatefulWidget {
   final int initialIndex;
   const MusicPlayerScreen({super.key, required this.playlist, required this.initialIndex});
 
+
   @override
   State<MusicPlayerScreen> createState() => _MusicPlayerScreenState();
 }
 
 class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
-  late AudioPlayer _audioPlayer;
+  final MusicController _controller = MusicController();
   final OnAudioQuery _audioQuery = OnAudioQuery();
-  late int _currentIndex;
   List<String> _favoriteSongIds = [];
   Color _backgroundColor = Colors.grey[900]!;
   Color _accentColor = Colors.grey[800]!;
@@ -27,10 +28,15 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
   @override
   void initState() {
     super.initState();
-    _audioPlayer = AudioPlayer();
-    _currentIndex = widget.initialIndex;
-    _initAndPlaySong(_currentIndex);
     _loadFavorites();
+    if(_controller.currentPlaylist != widget.playlist||
+    _controller.audioPlayer.currentIndex != widget.initialIndex) {
+      _controller.playPlaylist(widget.playlist, widget.initialIndex);
+    }
+  }
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   // 1. Favoriten aus dem Speicher laden
@@ -59,7 +65,7 @@ Future<void> _toggleFavorite(SongModel song) async {
   await prefs.setStringList('favorite_songs', _favoriteSongIds);
 }
 
-  Future<void> _initAndPlaySong(int index) async {
+  /* Future<void> _initAndPlaySong(int index) async {
     final song = widget.playlist[index];
     try {
       // Dem Player den Dateipfad des Songs übergeben und starten
@@ -69,7 +75,7 @@ Future<void> _toggleFavorite(SongModel song) async {
     } catch (e) {
       print("Fehler beim Abspielen: $e");
     }
-  }
+  } */
   Future<void> _extractPalette(int songId) async {
     try {
       final Uint8List? bytes = await _audioQuery.queryArtwork(
@@ -109,30 +115,17 @@ Future<void> _toggleFavorite(SongModel song) async {
 
   // 3. Navigation: Nächster Song
   void _skipNext() {
-    if (_currentIndex < widget.playlist.length - 1) {
-      setState(() {
-        _currentIndex++;
-      });
-      _initAndPlaySong(_currentIndex);
+    if (_controller.audioPlayer.hasNext) {
+      _controller.audioPlayer.seekToNext();
     }
   }
 
   // 4. Navigation: Vorheriger Song
   void _skipPrevious() {
-    if (_currentIndex > 0) {
-      setState(() {
-        _currentIndex--;
-      });
-      _initAndPlaySong(_currentIndex);
+    if (_controller.audioPlayer.hasPrevious) {
+     _controller.audioPlayer.seekToPrevious();
     }
   }
-  @override
-  void dispose() {
-    // WICHTIG: Den Player im Speicher aufräumen, wenn die Seite geschlossen wird!
-    _audioPlayer.dispose();
-    super.dispose();
-  }
-
   String _formatDuration(Duration duration) {
   String twoDigits(int n) => n.toString().padLeft(2, '0');
   final minutes = twoDigits(duration.inMinutes.remainder(60));
@@ -143,9 +136,18 @@ Future<void> _toggleFavorite(SongModel song) async {
 
 @override
   Widget build(BuildContext context) {
-    final currentSong = widget.playlist[_currentIndex];
-    final isFavorite = _favoriteSongIds.contains(currentSong.id.toString());
+    return StreamBuilder<int?>(
+      stream: _controller.audioPlayer.currentIndexStream,
+      builder: (context, snapshot) {
+        final currentIndex = _controller.audioPlayer.currentIndex ?? 0;
 
+        if (_controller.currentPlaylist.isEmpty) {
+          return const Scaffold(body: Center(child: Text("Kein song da")));
+        }
+
+        final currentSong = _controller.currentPlaylist[currentIndex];
+        final isFavorite = _favoriteSongIds.contains(currentSong.id.toString());
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text("aktuelle appbar change soon"),
@@ -225,10 +227,10 @@ Future<void> _toggleFavorite(SongModel song) async {
 
             // 3. Slider / Fortschrittsbalken mit StreamBuilder
             StreamBuilder<Duration?>(
-              stream: _audioPlayer.positionStream,
+              stream: _controller.audioPlayer.positionStream,
               builder: (context, snapshot) {
                 final position = snapshot.data ?? Duration.zero;
-                final duration = _audioPlayer.duration ?? Duration.zero;
+                final duration = _controller.audioPlayer.duration ?? Duration.zero;
                 final maxDuration = duration.inMilliseconds.toDouble() > 0
                     ? duration.inMilliseconds.toDouble()
                     : 1.0;
@@ -242,7 +244,7 @@ Future<void> _toggleFavorite(SongModel song) async {
                           .clamp(0.0, maxDuration)
                           .toDouble(),
                       onChanged: (value) {
-                        _audioPlayer.seek(
+                        _controller.audioPlayer.seek(
                           Duration(milliseconds: value.toInt()),
                         );
                       },
@@ -269,10 +271,10 @@ Future<void> _toggleFavorite(SongModel song) async {
                 IconButton(
                   iconSize: 40,
                   icon: const Icon(Icons.skip_previous),
-                  onPressed: _currentIndex > 0 ? _skipPrevious : null,
+                  onPressed: _controller.audioPlayer.hasPrevious  ? _skipPrevious : null,
                 ),
                 StreamBuilder<PlayerState>(
-                  stream: _audioPlayer.playerStateStream,
+                  stream: _controller.audioPlayer.playerStateStream,
                   builder: (context, snapshot) {
                     final playerState = snapshot.data;
                     final playing = playerState?.playing;
@@ -281,13 +283,13 @@ Future<void> _toggleFavorite(SongModel song) async {
                       return IconButton(
                         iconSize: 64,
                         icon: const Icon(Icons.play_circle_fill),
-                        onPressed: _audioPlayer.play,
+                        onPressed: _controller.audioPlayer.play,
                       );
                     } else {
                       return IconButton(
                         iconSize: 64,
                         icon: const Icon(Icons.pause_circle_filled),
-                        onPressed: _audioPlayer.pause,
+                        onPressed: _controller.audioPlayer.pause,
                       );
                     }
                   },
@@ -295,13 +297,15 @@ Future<void> _toggleFavorite(SongModel song) async {
                 IconButton(
                   iconSize: 40,
                   icon: const Icon(Icons.skip_next),
-                  onPressed: _currentIndex < widget.playlist.length - 1 ? _skipNext : null,
+                  onPressed: _controller.audioPlayer.hasNext ? _skipNext : null,
+                  ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
