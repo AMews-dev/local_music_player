@@ -7,13 +7,19 @@ class MusicController {
   factory MusicController() => _instance;
   MusicController._internal();
 
+
   // 2. Der globale AudioPlayer und die klassische ConcatenatingAudioSource
   final AudioPlayer audioPlayer = AudioPlayer();
   List<SongModel> currentPlaylist = [];
   
-
+  //globale lock against fast klicking 
+  bool _isChangingTrack = false;
+  bool _isQueuing = false;
   // Playlist starten
+
   Future<void> playPlaylist(List<SongModel> playlist, int initialIndex) async {
+    if (_isChangingTrack) return;
+    _isChangingTrack = true;
    try {
     currentPlaylist = playlist;
     await audioPlayer.stop();
@@ -32,11 +38,16 @@ class MusicController {
       audioPlayer.setLoopMode(LoopMode.all); // allow  endless loop
     } catch (e) {
       print("Fehler beim Abspielen der Playlist: $e");
+    } finally {
+      await Future.delayed(const Duration(milliseconds: 300));
+      _isChangingTrack = false;
     }
   }
 
   // "Als Nächstes spielen" – absolut unkompliziert mit der klassischen API!
  Future<void> playNext(SongModel newSong) async {
+  if(_isQueuing) return;
+  _isQueuing = true;
     try {
       if (currentPlaylist.isEmpty) {
         playPlaylist([newSong], 0);
@@ -62,6 +73,49 @@ class MusicController {
       print("Song '${newSong.title}' wurde erfolgreich als Nächstes eingereiht!");
     } catch (e) {
       print("Fehler beim 'Als Nächstes spielen': $e");
+    } finally {
+      await Future.delayed(const Duration(milliseconds: 200));
+      _isQueuing = false;
     }
   }
+
+  Future<void> skipNext() async {
+    if (_isChangingTrack) return;
+    _isChangingTrack = true;
+
+    try {
+      final currentIndex = audioPlayer.currentIndex ?? 0;
+      if (currentIndex < currentPlaylist.length - 1) {
+        await audioPlayer.seekToNext();
+      } else {
+        // Wrap-Around zum Anfang (optional)
+        await audioPlayer.seek(Duration.zero, index: 0);
+      }
+    } finally {
+      await Future.delayed(const Duration(milliseconds: 300));
+      _isChangingTrack = false;
+    }
+  }
+
+  // 4. Optional: Vorherigen Song überspringen direkt im Controller steuern
+  Future<void> skipPrevious() async {
+    if (_isChangingTrack) return;
+    _isChangingTrack = true;
+
+    try {
+      final currentIndex = audioPlayer.currentIndex ?? 0;
+      if (currentIndex > 0) {
+        await audioPlayer.seekToPrevious();
+      } else {
+        // Wrap-Around zum Ende (optional)
+        final lastIndex = currentPlaylist.length - 1;
+        await audioPlayer.seek(Duration.zero, index: lastIndex);
+      }
+    } finally {
+      await Future.delayed(const Duration(milliseconds: 300));
+      _isChangingTrack = false;
+    }
+  }
+
+
 }

@@ -115,16 +115,12 @@ Future<void> _toggleFavorite(SongModel song) async {
 
   // 3. Navigation: Nächster Song
   void _skipNext() {
-    if (_controller.audioPlayer.hasNext) {
-      _controller.audioPlayer.seekToNext();
-    }
+    _controller.skipNext();
   }
 
   // 4. Navigation: Vorheriger Song
   void _skipPrevious() {
-    if (_controller.audioPlayer.hasPrevious) {
-     _controller.audioPlayer.seekToPrevious();
-    }
+    _controller.skipPrevious();
   }
   String _formatDuration(Duration duration) {
   String twoDigits(int n) => n.toString().padLeft(2, '0');
@@ -271,7 +267,7 @@ Future<void> _toggleFavorite(SongModel song) async {
                 IconButton(
                   iconSize: 40,
                   icon: const Icon(Icons.skip_previous),
-                  onPressed: _controller.audioPlayer.hasPrevious  ? _skipPrevious : null,
+                  onPressed: _skipPrevious
                 ),
                 StreamBuilder<PlayerState>(
                   stream: _controller.audioPlayer.playerStateStream,
@@ -297,7 +293,7 @@ Future<void> _toggleFavorite(SongModel song) async {
                 IconButton(
                   iconSize: 40,
                   icon: const Icon(Icons.skip_next),
-                  onPressed: _controller.audioPlayer.hasNext ? _skipNext : null,
+                  onPressed: _skipNext
                   ),
                   ],
                 ),
