@@ -7,6 +7,33 @@ class MusicController {
   factory MusicController() => _instance;
   MusicController._internal();
 
+  final List<SongModel> favoriteSongs = [];
+   
+  bool isFavoriteSong(SongModel song) {
+    return favoriteSongs.any((s) => s.id == song.id);
+  }
+
+ void toggleFavorite(SongModel song) {
+    if (isFavoriteSong(song)) {
+      favoriteSongs.removeWhere((s) => s.id == song.id);
+      print("❌ AUS FAVORITEN ENTFERNT: ${song.title}");
+    } else {
+      favoriteSongs.add(song);
+      print("❤️ ZU FAVORITEN HINZUGEFÜGT: ${song.title}");
+    }
+  }
+
+
+  final Map<String, List<SongModel>> customPlaylists = {};
+  void createPlaylist(String playlistName, SongModel initalSong) {
+    customPlaylists[playlistName] = [initalSong];
+  }
+
+  void addSongToPlaylist(String playlistName, SongModel song) {
+    if(customPlaylists.containsKey(playlistName)) {
+      customPlaylists[playlistName]!.add(song);
+    }
+  }
 
   // 2. Der globale AudioPlayer und die klassische ConcatenatingAudioSource
   final AudioPlayer audioPlayer = AudioPlayer();

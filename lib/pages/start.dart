@@ -5,6 +5,7 @@ import 'package:flutter_application_1/pages/library_screen.dart';
 import 'package:flutter_application_1/pages/videoLibPage.dart';
 import 'package:flutter_application_1/pages/homePage.dart';
 import 'package:flutter_application_1/services/music_controller.dart';
+import 'package:flutter_application_1/widgets/favorite_button_view.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 class StartPage extends StatefulWidget {
   const StartPage({super.key});
@@ -150,7 +151,32 @@ class _StartPageState extends State<StartPage> {
                                 ],
                               ),
                             ),
-
+                            IconButton(
+                              icon: Icon(
+                                // 1. Fragt den Controller: Ist dieser Song in der Favoriten-Liste?
+                                _controller.isFavoriteSong(currentSong) 
+                                    ? Icons.favorite 
+                                    : Icons.favorite_border,
+                                color: _controller.isFavoriteSong(currentSong) 
+                                    ? Colors.red 
+                                    : Colors.white,
+                              ),
+                              onPressed: () {
+                                // 2. setState zwingt das Widget, sich sofort neu zu zeichnen!
+                                 showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.grey[900], // Spotify-Darkmode Look
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                  ),
+                                  builder: (context) => FavoriteButtonView(song: currentSong),
+                                 );
+                                setState(() {
+                                  _controller.toggleFavorite(currentSong);
+                                });
+                              },
+                            ),
                             // Live Play / Pause Button im Mini-Player
                             StreamBuilder<bool>(
                               stream: _controller.audioPlayer.playingStream,

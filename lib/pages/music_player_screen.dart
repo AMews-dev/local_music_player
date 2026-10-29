@@ -43,7 +43,7 @@ Future<void> _loadFavorites() async {
   });
 }
 
-// 2. Song zu Favoriten hinzufügen oder entfernen (Toggle)
+/* // 2. Song zu Favoriten hinzufügen oder entfernen (Toggle)
 Future<void> _toggleFavorite(SongModel song) async {
   final prefs = await SharedPreferences.getInstance();
   final songIdStr = song.id.toString();
@@ -58,7 +58,7 @@ Future<void> _toggleFavorite(SongModel song) async {
 
   // In den SharedPreferences abspeichern
   await prefs.setStringList('favorite_songs', _favoriteSongIds);
-}
+} */
 
   /* Future<void> _initAndPlaySong(int index) async {
     final song = widget.playlist[index];
@@ -204,18 +204,26 @@ Future<void> _toggleFavorite(SongModel song) async {
                     ],
                   ),
                 ),
-                // Das Favoriten-Herz
                 IconButton(
-                  icon: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: isFavorite ? Colors.redAccent : Colors.grey,
-                    size: 28,
-                  ),
-                  onPressed: () => _toggleFavorite(currentSong),
-                ),
+                              icon: Icon(
+                                // 1. Fragt den Controller: Ist dieser Song in der Favoriten-Liste?
+                                _controller.isFavoriteSong(currentSong) 
+                                    ? Icons.favorite 
+                                    : Icons.favorite_border,
+                                color: _controller.isFavoriteSong(currentSong) 
+                                    ? Colors.red 
+                                    : Colors.blue,
+                              ),
+                              onPressed: () {
+                                // 2. setState zwingt das Widget, sich sofort neu zu zeichnen!
+                                setState(() {
+                                  _controller.toggleFavorite(currentSong);
+                                });
+                              },
+                            ),
+               
               ],
             ),
-
             // 3. Slider / Fortschrittsbalken mit StreamBuilder
             StreamBuilder<Duration?>(
               stream: _controller.audioPlayer.positionStream,
