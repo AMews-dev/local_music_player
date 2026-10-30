@@ -6,11 +6,12 @@ import 'package:flutter_application_1/pages/library_screen.dart';
 import 'package:flutter_application_1/pages/videoLibPage.dart';
 import 'package:flutter_application_1/pages/homePage.dart';
 import 'package:flutter_application_1/services/music_controller.dart';
-import 'package:flutter_application_1/widgets/favorite_button_view.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+
 
 class StartPage extends StatefulWidget {
   const StartPage({super.key});
+
 
   @override
   State<StartPage> createState() => _StartPageState();
