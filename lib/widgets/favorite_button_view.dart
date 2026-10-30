@@ -15,13 +15,29 @@ class _FavoriteButtonViewState extends State<FavoriteButtonView> {
   final MusicController controller = MusicController();
   @override
   Widget build(BuildContext context) {
+    // 1. Prüfen, ob der Song in den Favoriten ist
+    final bool isFav = controller.isFavoriteSong(widget.song);
+
+    // 2. Playlists aufteilen
+    final allPlaylists = controller.customPlaylists.keys.toList();
+
+    final playlistsWithSong = allPlaylists.where((name) {
+      final songs = controller.customPlaylists[name]!;
+      return songs.any((s) => s.id == widget.song.id);
+    }).toList();
+
+    final playlistsWithoutSong = allPlaylists.where((name) {
+      final songs = controller.customPlaylists[name]!;
+      return !songs.any((s) => s.id == widget.song.id);
+    }).toList();
+
     return DraggableScrollableSheet(
-      initialChildSize: 0.9,
-      minChildSize: 0.5,
+      initialChildSize: 0.4,
+      minChildSize: 0.4,
       maxChildSize: 0.95,
       expand: false,
       snap: true,
-      snapSizes: const [0.9, 0.95],
+      snapSizes: const [0.4, 0.95],
       builder: (context, scrollController) {
         return Container(
           decoration: const BoxDecoration(
@@ -46,7 +62,7 @@ class _FavoriteButtonViewState extends State<FavoriteButtonView> {
               ),
 
               // ==========================================
-              // 1. KOPFZEILE: Abbrechen, Titel & "Neue Playlist"
+              // 1. KOPFZEILE: Abbrechen & Fertig
               // ==========================================
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -59,8 +75,7 @@ class _FavoriteButtonViewState extends State<FavoriteButtonView> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () =>
-                        Navigator.pop(context), // Schließt das Menü
+                    onPressed: () => Navigator.pop(context),
                     child: const Text(
                       "Fertig",
                       style: TextStyle(
@@ -83,7 +98,7 @@ class _FavoriteButtonViewState extends State<FavoriteButtonView> {
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 22, // Schöne, große Überschrift wie bei Spotify
+                      fontSize: 22,
                     ),
                   ),
                   TextButton(
@@ -105,126 +120,36 @@ class _FavoriteButtonViewState extends State<FavoriteButtonView> {
               const SizedBox(height: 16),
 
               // ==========================================
-              // 2. LIEBLINGSSONGS (Fester Eintrag ganz oben)
+              // 2. OBEN: WENN FAVORIT AKTIV IST
               // ==========================================
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Colors.purple, Colors.blue],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Icon(Icons.favorite, color: Colors.white),
-                ),
-                title: const Text(
-                  "Lieblingssongs",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                trailing: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: controller.isFavoriteSong(widget.song)
-                        ? Colors.green
-                        : Colors.transparent,
-                    border: Border.all(
-                      color: controller.isFavoriteSong(widget.song)
-                          ? Colors.green
-                          : Colors.white,
-                      width: 2,
-                    ),
-                  ),
-                  child: Icon(
-                    controller.isFavoriteSong(widget.song)
-                        ? Icons.check
-                        : Icons.add,
-                    size: 18,
-                    color: Colors.white,
-                  ),
-                ),
-                onTap: () {
-                  setState(() {
-                    controller.toggleFavorite(widget.song);
-                  });
-                },
-              ),
-
-              const SizedBox(height: 16),
+              if (isFav) ...[_buildFavoriteTile(controller)],
 
               // ==========================================
-              // 3. SUCHLEISTE & SORTIEREN
-              // ==========================================
-              if (controller.customPlaylists.length > 5) ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[850],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: TextField(
-                        controller: _searchController,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: const InputDecoration(
-                          icon: Icon(Icons.search, color: Colors.grey),
-                          hintText: "Playlist suchen",
-                          hintStyle: TextStyle(color: Colors.grey),
-                          border: InputBorder.none,
-                        ),
-                        onChanged: (value) {
-                          setState(
-                            () {},
-                          ); // Aktualisiert die Suche in der Liste
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  OutlinedButton(
-                    onPressed: () {
-                      // Sortier-Logik (optional)
-                    },
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.grey),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    child: const Text(
-                      "Sortieren",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-              
-              const SizedBox(height: 20),
-              ],
-              // ==========================================
-              // 4. LISTE DER EIGENEN PLAYLISTS
+              // 3. OBEN: PLAYLISTS MIT SONG + TRENNSTRICH AM ENDE
               // ==========================================
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: controller.customPlaylists.keys.length,
+                padding: EdgeInsets.zero,
+                // Wir zählen die Playlists + 1 (für den integrierten Trennstrich, falls oben aktive Elemente existieren)
+                itemCount:
+                    playlistsWithSong.length +
+                    (isFav || playlistsWithSong.isNotEmpty ? 1 : 0),
                 itemBuilder: (context, index) {
-                  final playlistName = controller.customPlaylists.keys
-                      .elementAt(index);
+                  // Wenn wir am Ende angekommen sind, rendern wir hier den Trennstrich mit perfekt gleichen Abständen
+                  if (index == playlistsWithSong.length) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 4),
+                      child: Divider(
+                        color: Colors.white24,
+                        thickness: 1,
+                        height: 1,
+                      ),
+                    );
+                  }
 
-                  // Suchfilter anwenden, falls der Nutzer etwas eingetippt hat
+                  final playlistName = playlistsWithSong[index];
+
                   if (_searchController.text.isNotEmpty &&
                       !playlistName.toLowerCase().contains(
                         _searchController.text.toLowerCase(),
@@ -234,12 +159,9 @@ class _FavoriteButtonViewState extends State<FavoriteButtonView> {
 
                   final songsInPlaylist =
                       controller.customPlaylists[playlistName]!;
-                  final bool isInThisPlaylist = songsInPlaylist.any(
-                    (s) => s.id == widget.song.id,
-                  );
 
                   return ListTile(
-                    contentPadding: EdgeInsets.symmetric(vertical: 4),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
                     leading: Container(
                       width: 50,
                       height: 50,
@@ -265,32 +187,139 @@ class _FavoriteButtonViewState extends State<FavoriteButtonView> {
                       height: 28,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: isInThisPlaylist
-                            ? Colors.green
-                            : Colors.transparent,
-                        border: Border.all(
-                          color: isInThisPlaylist ? Colors.green : Colors.white,
-                          width: 2,
-                        ),
+                        color: Colors.green,
+                        border: Border.all(color: Colors.green, width: 2),
                       ),
-                      child: Icon(
-                        isInThisPlaylist ? Icons.check : Icons.add,
+                      child: const Icon(
+                        Icons.check,
                         size: 18,
                         color: Colors.white,
                       ),
                     ),
                     onTap: () {
                       setState(() {
-                        if (!isInThisPlaylist) {
-                          controller.addSongToPlaylist(
-                            playlistName,
-                            widget.song,
-                          );
-                        } else {
-                          controller.customPlaylists[playlistName]!.removeWhere(
-                            (s) => s.id == widget.song.id,
-                          );
-                        }
+                        controller.customPlaylists[playlistName]!.removeWhere(
+                          (s) => s.id == widget.song.id,
+                        );
+                      });
+                    },
+                  );
+                },
+              ),
+
+              // ==========================================
+              // 4. UNTEN: WENN FAVORIT INAKTIV IST
+              // ==========================================
+              if (!isFav) ...[_buildFavoriteTile(controller)],
+
+              // ==========================================
+              // 5. SUCHLEISTE & SORTIEREN (Bedingt ab > 5 Playlists)
+              // ==========================================
+              if (controller.customPlaylists.length > 5) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[850],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            icon: Icon(Icons.search, color: Colors.grey),
+                            hintText: "Playlist suchen",
+                            hintStyle: TextStyle(color: Colors.grey),
+                            border: InputBorder.none,
+                          ),
+                          onChanged: (value) {
+                            setState(() {});
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    OutlinedButton(
+                      onPressed: () {},
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.grey),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: const Text(
+                        "Sortieren",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // ==========================================
+              // 6. UNTEN: PLAYLISTS OHNE SONG
+              // ==========================================
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                itemCount: playlistsWithoutSong.length,
+                itemBuilder: (context, index) {
+                  final playlistName = playlistsWithoutSong[index];
+
+                  if (_searchController.text.isNotEmpty &&
+                      !playlistName.toLowerCase().contains(
+                        _searchController.text.toLowerCase(),
+                      )) {
+                    return const SizedBox.shrink();
+                  }
+
+                  final songsInPlaylist =
+                      controller.customPlaylists[playlistName]!;
+
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    leading: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[800],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Icon(
+                        Icons.music_note,
+                        color: Colors.white54,
+                      ),
+                    ),
+                    title: Text(
+                      playlistName,
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                    subtitle: Text(
+                      "${songsInPlaylist.length} Song${songsInPlaylist.length == 1 ? '' : 's'}",
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    trailing: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.transparent,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: const Icon(
+                        Icons.add,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                    ),
+                    onTap: () {
+                      setState(() {
+                        controller.addSongToPlaylist(playlistName, widget.song);
                       });
                     },
                   );
@@ -299,6 +328,62 @@ class _FavoriteButtonViewState extends State<FavoriteButtonView> {
             ],
           ),
         );
+      },
+    );
+  }
+
+  // Hilfsfunktion für das Favoriten-Tile
+  Widget _buildFavoriteTile(MusicController controller) {
+    final bool isFav = controller.isFavoriteSong(widget.song);
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+      leading: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Colors.purple, Colors.blue],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: const Icon(Icons.favorite, color: Colors.white),
+      ),
+      title: const Text(
+        "Lieblingssongs",
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
+      ),
+      subtitle: Text(
+        "${controller.favoriteSongs.length} Songs",
+        style: const TextStyle(color: Colors.grey, fontSize: 14),
+      ),
+      trailing: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isFav ? Colors.green : Colors.transparent,
+          border: Border.all(
+            color: isFav ? Colors.green : Colors.white,
+            width: 2,
+          ),
+        ),
+        child: Icon(
+          isFav ? Icons.check : Icons.add,
+          size: 18,
+          color: Colors.white,
+        ),
+      ),
+      onTap: () {
+        setState(() {
+          controller.toggleFavorite(widget.song);
+        });
       },
     );
   }

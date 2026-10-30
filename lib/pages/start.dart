@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/helper/song_helper.dart';
 import 'package:flutter_application_1/pages/music_player_screen.dart';
 import 'package:flutter_application_1/pages/searchPage.dart';
 import 'package:flutter_application_1/pages/library_screen.dart';
@@ -7,12 +8,14 @@ import 'package:flutter_application_1/pages/homePage.dart';
 import 'package:flutter_application_1/services/music_controller.dart';
 import 'package:flutter_application_1/widgets/favorite_button_view.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+
 class StartPage extends StatefulWidget {
   const StartPage({super.key});
 
   @override
   State<StartPage> createState() => _StartPageState();
 }
+
 class _StartPageState extends State<StartPage> {
   int _currentIndex = 0;
   final MusicController _controller = MusicController();
@@ -21,7 +24,7 @@ class _StartPageState extends State<StartPage> {
     HomePage(),
     SearchPage(), // Index 0: Deine Suchseite
     LibraryPage(),
-    VideoLibPage()
+    VideoLibPage(),
   ];
 
   // (Optional) Titel für die AppBar passend zum Tab
@@ -31,6 +34,7 @@ class _StartPageState extends State<StartPage> {
     "Bibliothek",
     "VideoLib",
   ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,7 +66,10 @@ class _StartPageState extends State<StartPage> {
 
                 return Container(
                   height: 65,
-                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.grey[900],
                     borderRadius: BorderRadius.circular(12),
@@ -153,30 +160,24 @@ class _StartPageState extends State<StartPage> {
                             ),
                             IconButton(
                               icon: Icon(
-                                // 1. Fragt den Controller: Ist dieser Song in der Favoriten-Liste?
-                                _controller.isFavoriteSong(currentSong) 
-                                    ? Icons.favorite 
+                                _controller.isSongSavedAnywhere(currentSong)
+                                    ? Icons.favorite
                                     : Icons.favorite_border,
-                                color: _controller.isFavoriteSong(currentSong) 
-                                    ? Colors.red 
+                                color:
+                                    _controller.isSongSavedAnywhere(currentSong)
+                                    ? Colors.red
                                     : Colors.white,
                               ),
+
                               onPressed: () {
-                                // 2. setState zwingt das Widget, sich sofort neu zu zeichnen!
-                                 showModalBottomSheet(
+                                handleSongHeartTap(
                                   context: context,
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.grey[900], // Spotify-Darkmode Look
-                                  shape: const RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                                  ),
-                                  builder: (context) => FavoriteButtonView(song: currentSong),
-                                 );
-                                setState(() {
-                                  _controller.toggleFavorite(currentSong);
-                                });
+                                  song: currentSong,
+                                  onUpdate: () => setState(() {}),
+                                );
                               },
                             ),
+
                             // Live Play / Pause Button im Mini-Player
                             StreamBuilder<bool>(
                               stream: _controller.audioPlayer.playingStream,
@@ -208,7 +209,7 @@ class _StartPageState extends State<StartPage> {
           ),
         ],
       ),
-      
+
       // Deine gewohnte Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -219,15 +220,9 @@ class _StartPageState extends State<StartPage> {
           });
         },
         items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: "Search"),
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "Home",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: "Search",
-          ),
-          BottomNavigationBarItem( 
             icon: Icon(Icons.library_add),
             label: "Bibliothek",
           ),

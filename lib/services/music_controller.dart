@@ -13,6 +13,14 @@ class MusicController {
     return favoriteSongs.any((s) => s.id == song.id);
   }
 
+  bool isSongSavedAnywhere(SongModel song) {
+    final bool isFav = isFavoriteSong(song);
+    final bool isInAnyPlaylist = customPlaylists.values.any(
+      (songList) => songList.any((s) => s.id == song.id),
+    );
+    return isFav || isInAnyPlaylist;
+  }
+
  void toggleFavorite(SongModel song) {
     if (isFavoriteSong(song)) {
       favoriteSongs.removeWhere((s) => s.id == song.id);

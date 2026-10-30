@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/helper/song_helper.dart';
 import 'package:flutter_application_1/services/music_controller.dart';
+import 'package:flutter_application_1/widgets/favorite_button_view.dart';
 import 'package:just_audio/just_audio.dart';
 import "package:on_audio_query/on_audio_query.dart";
 import 'package:palette_generator/palette_generator.dart';
+
 import 'dart:typed_data';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MusicPlayerScreen extends StatefulWidget {
-  const MusicPlayerScreen({super.key,});
-
+  const MusicPlayerScreen({super.key});
 
   @override
   State<MusicPlayerScreen> createState() => _MusicPlayerScreenState();
@@ -22,28 +24,27 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
   Color _backgroundColor = Colors.grey[900]!;
   Color _accentColor = Colors.grey[800]!;
 
-
   @override
   void initState() {
     super.initState();
     _loadFavorites();
-   
   }
+
   @override
   void dispose() {
     super.dispose();
   }
 
   // 1. Favoriten aus dem Speicher laden
-Future<void> _loadFavorites() async {
-  final prefs = await SharedPreferences.getInstance();
-  setState(() {
-    // Wir speichern die Song-IDs als String-Liste
-    _favoriteSongIds = prefs.getStringList('favorite_songs') ?? [];
-  });
-}
+  Future<void> _loadFavorites() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      // Wir speichern die Song-IDs als String-Liste
+      _favoriteSongIds = prefs.getStringList('favorite_songs') ?? [];
+    });
+  }
 
-/* // 2. Song zu Favoriten hinzufügen oder entfernen (Toggle)
+  /* // 2. Song zu Favoriten hinzufügen oder entfernen (Toggle)
 Future<void> _toggleFavorite(SongModel song) async {
   final prefs = await SharedPreferences.getInstance();
   final songIdStr = song.id.toString();
@@ -88,11 +89,13 @@ Future<void> _toggleFavorite(SongModel song) async {
 
         setState(() {
           // Nimmt die dominanteste oder schickste Farbe aus dem Bild
-          _backgroundColor = paletteGenerator.dominantColor?.color ??
+          _backgroundColor =
+              paletteGenerator.dominantColor?.color ??
               paletteGenerator.darkMutedColor?.color ??
               Colors.grey[900]!;
 
-          _accentColor = paletteGenerator.vibrantColor?.color ??
+          _accentColor =
+              paletteGenerator.vibrantColor?.color ??
               paletteGenerator.lightMutedColor?.color ??
               Colors.grey[800]!;
         });
@@ -117,15 +120,15 @@ Future<void> _toggleFavorite(SongModel song) async {
   void _skipPrevious() {
     _controller.skipPrevious();
   }
+
   String _formatDuration(Duration duration) {
-  String twoDigits(int n) => n.toString().padLeft(2, '0');
-  final minutes = twoDigits(duration.inMinutes.remainder(60));
-  final seconds = twoDigits(duration.inSeconds.remainder(60));
-  return "$minutes:$seconds";
-}
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return "$minutes:$seconds";
+  }
 
-
-@override
+  @override
   Widget build(BuildContext context) {
     return StreamBuilder<int?>(
       stream: _controller.audioPlayer.currentIndexStream,
@@ -138,166 +141,175 @@ Future<void> _toggleFavorite(SongModel song) async {
 
         final currentSong = _controller.currentPlaylist[currentIndex];
         final isFavorite = _favoriteSongIds.contains(currentSong.id.toString());
-    
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("aktuelle appbar change soon"),
-        leading: IconButton(
-          icon: const Icon(Icons.keyboard_arrow_down),
-          onPressed: () => Navigator.pop(context),
-        ),
-        iconTheme: const IconThemeData(color: Colors.green, size: 35),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Verteilt die Elemente gleichmäßig
-          children: [
-            // 1. Großes Album Cover
-            Center(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20), // Abgerundete Ecken wie bei MIUI
-                child: QueryArtworkWidget(
-                  id: currentSong.id,
-                  type: ArtworkType.AUDIO,
-                  artworkWidth: 300,
-                  artworkHeight: 300,
-                  artworkFit: BoxFit.cover,
-                  nullArtworkWidget: Container(
-                    width: 300,
-                    height: 300,
-                    color: Colors.grey[800],
-                    child: const Icon(
-                      Icons.music_note,
-                      size: 100,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ),
 
-            // 2. Songtitel, Artist & Favoriten-Herz
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.keyboard_arrow_down),
+              onPressed: () => Navigator.pop(context),
+            ),
+            iconTheme: const IconThemeData(color: Colors.green, size: 35),
+          ),
+          body: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 16.0,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment
+                  .spaceEvenly, // Verteilt die Elemente gleichmäßig
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        currentSong.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
+                // 1. Großes Album Cover
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(
+                      20,
+                    ), // Abgerundete Ecken wie bei MIUI
+                    child: QueryArtworkWidget(
+                      id: currentSong.id,
+                      type: ArtworkType.AUDIO,
+                      artworkWidth: 300,
+                      artworkHeight: 300,
+                      artworkFit: BoxFit.cover,
+                      nullArtworkWidget: Container(
+                        width: 300,
+                        height: 300,
+                        color: Colors.grey[800],
+                        child: const Icon(
+                          Icons.music_note,
+                          size: 100,
+                          color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        currentSong.artist ?? 'Unbekannter Künstler',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 16, color: Colors.grey),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-                IconButton(
-                              icon: Icon(
-                                // 1. Fragt den Controller: Ist dieser Song in der Favoriten-Liste?
-                                _controller.isFavoriteSong(currentSong) 
-                                    ? Icons.favorite 
-                                    : Icons.favorite_border,
-                                color: _controller.isFavoriteSong(currentSong) 
-                                    ? Colors.red 
-                                    : Colors.blue,
-                              ),
-                              onPressed: () {
-                                // 2. setState zwingt das Widget, sich sofort neu zu zeichnen!
-                                setState(() {
-                                  _controller.toggleFavorite(currentSong);
-                                });
-                              },
-                            ),
-               
-              ],
-            ),
-            // 3. Slider / Fortschrittsbalken mit StreamBuilder
-            StreamBuilder<Duration?>(
-              stream: _controller.audioPlayer.positionStream,
-              builder: (context, snapshot) {
-                final position = snapshot.data ?? Duration.zero;
-                final duration = _controller.audioPlayer.duration ?? Duration.zero;
-                final maxDuration = duration.inMilliseconds.toDouble() > 0
-                    ? duration.inMilliseconds.toDouble()
-                    : 1.0;
 
-                return Column(
+                // 2. Songtitel, Artist & Favoriten-Herz
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Slider(
-                      min: 0.0,
-                      max: maxDuration,
-                      value: position.inMilliseconds
-                          .clamp(0.0, maxDuration)
-                          .toDouble(),
-                      onChanged: (value) {
-                        _controller.audioPlayer.seek(
-                          Duration(milliseconds: value.toInt()),
-                        );
-                      },
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_formatDuration(position)),
-                          Text(_formatDuration(duration)),
+                          Text(
+                            currentSong.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            currentSong.artist ?? 'Unbekannter Künstler',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          ),
                         ],
                       ),
                     ),
+                    IconButton(
+                      icon: Icon(
+                        _controller.isSongSavedAnywhere(currentSong)
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: _controller.isSongSavedAnywhere(currentSong)
+                            ? Colors.red
+                            : Colors.green,
+                      ),
+
+                      onPressed: () {
+                        handleSongHeartTap(
+                          context: context,
+                          song: currentSong,
+                          onUpdate: () => setState(() {}),
+                        );
+                      },
+                    ),
                   ],
-                );
-              },
-            ),
-
-            // 4. Steuerungs-Buttons (Play / Pause / Vor / Zurück)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(
-                  iconSize: 40,
-                  icon: const Icon(Icons.skip_previous),
-                  onPressed: _skipPrevious
                 ),
-                StreamBuilder<PlayerState>(
-                  stream: _controller.audioPlayer.playerStateStream,
+                // 3. Slider / Fortschrittsbalken mit StreamBuilder
+                StreamBuilder<Duration?>(
+                  stream: _controller.audioPlayer.positionStream,
                   builder: (context, snapshot) {
-                    final playerState = snapshot.data;
-                    final playing = playerState?.playing;
+                    final position = snapshot.data ?? Duration.zero;
+                    final duration =
+                        _controller.audioPlayer.duration ?? Duration.zero;
+                    final maxDuration = duration.inMilliseconds.toDouble() > 0
+                        ? duration.inMilliseconds.toDouble()
+                        : 1.0;
 
-                    if (playing != true) {
-                      return IconButton(
-                        iconSize: 64,
-                        icon: const Icon(Icons.play_circle_fill),
-                        onPressed: _controller.audioPlayer.play,
-                      );
-                    } else {
-                      return IconButton(
-                        iconSize: 64,
-                        icon: const Icon(Icons.pause_circle_filled),
-                        onPressed: _controller.audioPlayer.pause,
-                      );
-                    }
+                    return Column(
+                      children: [
+                        Slider(
+                          min: 0.0,
+                          max: maxDuration,
+                          value: position.inMilliseconds
+                              .clamp(0.0, maxDuration)
+                              .toDouble(),
+                          onChanged: (value) {
+                            _controller.audioPlayer.seek(
+                              Duration(milliseconds: value.toInt()),
+                            );
+                          },
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(_formatDuration(position)),
+                              Text(_formatDuration(duration)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
                   },
                 ),
-                IconButton(
-                  iconSize: 40,
-                  icon: const Icon(Icons.skip_next),
-                  onPressed: _skipNext
-                  ),
+
+                // 4. Steuerungs-Buttons (Play / Pause / Vor / Zurück)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(
+                      iconSize: 40,
+                      icon: const Icon(Icons.skip_previous),
+                      onPressed: _skipPrevious,
+                    ),
+                    StreamBuilder<PlayerState>(
+                      stream: _controller.audioPlayer.playerStateStream,
+                      builder: (context, snapshot) {
+                        final playerState = snapshot.data;
+                        final playing = playerState?.playing;
+
+                        if (playing != true) {
+                          return IconButton(
+                            iconSize: 64,
+                            icon: const Icon(Icons.play_circle_fill),
+                            onPressed: _controller.audioPlayer.play,
+                          );
+                        } else {
+                          return IconButton(
+                            iconSize: 64,
+                            icon: const Icon(Icons.pause_circle_filled),
+                            onPressed: _controller.audioPlayer.pause,
+                          );
+                        }
+                      },
+                    ),
+                    IconButton(
+                      iconSize: 40,
+                      icon: const Icon(Icons.skip_next),
+                      onPressed: _skipNext,
+                    ),
                   ],
                 ),
               ],
