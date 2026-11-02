@@ -27,7 +27,7 @@ class SongListView extends StatelessWidget {
         SongModel song = songs[index];
         return ListTile(
           leading: const Icon(Icons.music_note, color: Colors.blue),
-          title: Text(song.title),
+          title: Text((song.title.isNotEmpty) ? song.title : "Unbekannter Titel"),
           subtitle: Text(song.artist ?? "Unbekannter Interpret", maxLines: 1, overflow: TextOverflow.ellipsis),
           trailing: IconButton(
             icon:Icon(Icons.more_vert),

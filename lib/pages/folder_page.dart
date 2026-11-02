@@ -1,17 +1,16 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/folder_detail_page.dart';
 import 'package:flutter_application_1/services/media_service.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
-class VideoLibPage extends StatefulWidget {
-  const VideoLibPage({super.key});
+class FolderPage extends StatefulWidget {
+  const FolderPage({super.key});
 
   @override
-  State<VideoLibPage> createState() => _VideoLibPageState();
+  State<FolderPage> createState() => _FolderPageState();
 }
 
-class _VideoLibPageState extends State<VideoLibPage> {
+class _FolderPageState extends State<FolderPage> {
   final MediaService _mediaService = MediaService();
   List<SongModel> _songs = [];
   Map<String, List<SongModel>> _ordner = {}; 
@@ -55,13 +54,13 @@ class _VideoLibPageState extends State<VideoLibPage> {
     return ListView.builder(
       itemCount: _ordner.length,
       itemBuilder: (context, index) {
-        // 1. Wir holen den Pfad (den Key der Map) an der Stelle 'index'
+        // 1. folderpath 
       final folderPath = _ordner.keys.elementAt(index);
       
-      // 2. Wir holen die Liste der Songs für diesen Ordner
+      // 2. list of song in folder
       final songsInFolder = _ordner[folderPath]!;
       
-      // 3. Wir extrahieren nur den reinen Ordnernamen aus dem Pfad
+      // 3. 
       final folderName = folderPath.split('/').last;
         return ListTile(
           leading: const Icon(Icons.music_note, color: Colors.blue),

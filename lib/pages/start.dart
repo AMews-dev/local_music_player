@@ -3,7 +3,7 @@ import 'package:flutter_application_1/helper/song_helper.dart';
 import 'package:flutter_application_1/pages/music_player_screen.dart';
 import 'package:flutter_application_1/pages/searchPage.dart';
 import 'package:flutter_application_1/pages/library_screen.dart';
-import 'package:flutter_application_1/pages/videoLibPage.dart';
+import 'package:flutter_application_1/pages/folder_page.dart';
 import 'package:flutter_application_1/pages/homePage.dart';
 import 'package:flutter_application_1/services/music_controller.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -23,15 +23,12 @@ class _StartPageState extends State<StartPage> {
 
   final List<Widget> _pages = const [
     HomePage(),
-    SearchPage(), // Index 0: Deine Suchseite
     LibraryPage(),
-    VideoLibPage(),
   ];
 
   // (Optional) Titel für die AppBar passend zum Tab
   final List<String> _titles = const [
     "Startseite",
-    "Suchen",
     "Bibliothek",
     "VideoLib",
   ];
@@ -222,15 +219,11 @@ class _StartPageState extends State<StartPage> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: "Search"),
           BottomNavigationBarItem(
             icon: Icon(Icons.library_add),
             label: "Bibliothek",
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.folder),
-            label: "VideoOrdner",
-          ),
+        
         ],
       ),
     );

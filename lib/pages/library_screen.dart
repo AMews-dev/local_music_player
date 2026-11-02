@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/pages/folder_page.dart';
+import 'package:flutter_application_1/pages/playlist_page.dart';
 import 'package:flutter_application_1/services/media_service.dart';
 import 'package:flutter_application_1/widgets/song_list_view.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -13,7 +15,6 @@ class LibraryPage extends StatefulWidget {
 
 class _LibraryPageState extends State<LibraryPage> {
   final OnAudioQuery _audioQuery = OnAudioQuery();
-  final MediaService _mediaService = MediaService();
 
   List<SongModel> _allSongs = [];
   List<SongModel> _favoriteSongs = [];
@@ -79,10 +80,10 @@ class _LibraryPageState extends State<LibraryPage> {
         // Hier definierst du, welcher Inhalt bei welchem Tab angezeigt werden soll
         body:  TabBarView(
           children: [
-            Center(child: Text("Hier kommen deine Ordner hin")),
-            Center(child: Text("Hier kommen deine Playlists hin")),
-            Center(child: Text("Hier kommt die Liste aller Songs hin")),
-            Center(child: Text("Hier kommen die Künstler hin")),
+            FolderPage(),
+            PlaylistPage(),
+            Center(child: Text("Songs in Alben")),
+            Center(child: Text("Songs sortiert nach Artist")),
             SongListView(songs: _allSongs)
           ],
         ),

@@ -83,7 +83,7 @@ class MusicController {
   Future<void> _saveData() async {
     try {
       print("💾 _saveData gestartet...");
-      final prefs = await SharedPreferences.getInstance();
+    /*   final prefs = await SharedPreferences.getInstance();
       
       // Favoriten sicher speichern (nutzt s.getMap, um direkte Getter-Crashes zu umgehen)
       final favsMapList = favoriteSongs.map((s) {
@@ -96,13 +96,25 @@ class MusicController {
           'album': rawMap['_album'] ?? rawMap['album'] ?? 'Unbekanntes Album',
           'duration': rawMap['_duration'] ?? rawMap['duration'] ?? 0,
         };
-      }).toList();
+      }).toList(); */
+      final prefs = await SharedPreferences.getInstance();
+      
+      // 1. Speichere einfach die komplette getMap von jedem Song!
+      final favsMapList = favoriteSongs.map((s) => s.getMap).toList();
+      await prefs.setString('saved_favorites', jsonEncode(favsMapList));
+      print("✅ Favoriten erfolgreich gespeichert!");
+
+      // 2. Playlists ebenfalls vollständig als map speichern
+      final playlistsMapList = customPlaylists.map((key, songs) {
+        final mappedSongs = songs.map((s) => s.getMap).toList();
+        return MapEntry(key, mappedSongs);
+      });
       
       await prefs.setString('saved_favorites', jsonEncode(favsMapList));
       print("✅ Favoriten erfolgreich gespeichert!");
 
       // Playlists sicher speichern
-      final playlistsMapList = customPlaylists.map((key, songs) {
+      /* final playlistsMapList = customPlaylists.map((key, songs) {
         final mappedSongs = songs.map((s) {
           final rawMap = s.getMap;
           return {
@@ -115,7 +127,7 @@ class MusicController {
           };
         }).toList();
         return MapEntry(key, mappedSongs);
-      });
+      }); */
       
       await prefs.setString('saved_playlists', jsonEncode(playlistsMapList));
       print("✅ Playlists erfolgreich gespeichert!");
